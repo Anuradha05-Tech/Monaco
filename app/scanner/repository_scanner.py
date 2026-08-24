@@ -50,6 +50,18 @@ class RepositoryScanner:
 
         return files
 
+    def read_file(self, file_path):
+
+        path = Path(file_path)
+
+        try:
+            return path.read_text(
+                encoding="utf-8"
+            )
+
+        except UnicodeDecodeError:
+            return None
+
 
 if __name__ == "__main__":
 
@@ -65,3 +77,13 @@ if __name__ == "__main__":
             f"{file['path']} "
             f"→ {file['language']}"
         )
+
+        if file["language"] == "Python":
+
+            code = scanner.read_file(file["path"])
+
+            if code:
+
+                print("----- SOURCE CODE -----")
+                print(code)
+                print("-----------------------")

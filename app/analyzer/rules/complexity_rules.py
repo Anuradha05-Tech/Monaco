@@ -22,7 +22,9 @@ class ComplexityRules:
                         ast.If,
                         ast.For,
                         ast.While,
-                        ast.ExceptHandler
+                        ast.ExceptHandler,
+                        ast.With,
+                        ast.IfExp
                     )
                 ):
                     complexity += 1

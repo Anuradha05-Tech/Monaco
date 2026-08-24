@@ -27,7 +27,7 @@ class PythonAnalyzer:
         }
 
         # -------------------------
-        # AST INFORMATION
+        # FUNCTIONS
         # -------------------------
 
         for node in ast.walk(tree):
@@ -44,6 +44,10 @@ class PythonAnalyzer:
                     "line": node.lineno,
                     "parameters": parameters
                 })
+
+            # -------------------------
+            # CLASSES
+            # -------------------------
 
             elif isinstance(node, ast.ClassDef):
 
@@ -70,15 +74,29 @@ class PythonAnalyzer:
                     "methods": methods
                 })
 
+            # -------------------------
+            # IMPORTS
+            # -------------------------
+
             elif isinstance(node, ast.Import):
 
                 for alias in node.names:
-                    result["imports"].append(alias.name)
+
+                    result["imports"].append(
+                        alias.name
+                    )
 
             elif isinstance(node, ast.ImportFrom):
 
                 if node.module:
-                    result["imports"].append(node.module)
+
+                    result["imports"].append(
+                        node.module
+                    )
+
+            # -------------------------
+            # FUNCTION CALLS
+            # -------------------------
 
             elif isinstance(node, ast.Call):
 
@@ -92,23 +110,49 @@ class PythonAnalyzer:
                     })
 
         # -------------------------
-        # RUN STATIC ANALYSIS RULES
+        # SECURITY ANALYSIS
         # -------------------------
 
-        security_findings = (
-            self.security_rules
-            .check_dangerous_functions(tree)
+        security_findings = []
+
+        security_findings.extend(
+            self.security_rules.check_dangerous_functions(tree)
         )
 
-        quality_findings = (
-            self.quality_rules
-            .check_long_functions(tree)
+        security_findings.extend(
+            self.security_rules.check_hardcoded_secrets(tree)
         )
+
+        security_findings.extend(
+            self.security_rules.check_dangerous_subprocess(tree)
+        )
+
+        # -------------------------
+        # CODE QUALITY ANALYSIS
+        # -------------------------
+
+        quality_findings = []
+
+        quality_findings.extend(
+            self.quality_rules.check_long_functions(tree)
+        )
+
+        quality_findings.extend(
+            self.quality_rules.check_too_many_parameters(tree)
+        )
+
+        # -------------------------
+        # COMPLEXITY ANALYSIS
+        # -------------------------
 
         complexity_findings = (
             self.complexity_rules
             .check_complex_functions(tree)
         )
+
+        # -------------------------
+        # COMBINE ALL FINDINGS
+        # -------------------------
 
         result["findings"].extend(
             security_findings
@@ -125,7 +169,7 @@ class PythonAnalyzer:
         return result
 
     # -------------------------
-    # FUNCTION CALL NAME
+    # GET FUNCTION CALL NAME
     # -------------------------
 
     def get_call_name(self, node):
@@ -157,14 +201,18 @@ class PythonAnalyzer:
         return None
 
 
-# -------------------------
-# TEST
-# -------------------------
+# =========================================================
+# TEST THE ANALYZER
+# =========================================================
 
 if __name__ == "__main__":
 
     code = """
 import os
+import subprocess
+
+API_KEY = "my-secret-key"
+
 
 def dangerous_function(user_input):
 
@@ -172,6 +220,8 @@ def dangerous_function(user_input):
 
     if result:
         return True
+
+    subprocess.run(user_input)
 
     return False
 """

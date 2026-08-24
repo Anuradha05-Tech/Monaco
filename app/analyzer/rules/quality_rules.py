@@ -31,3 +31,30 @@ class QualityRules:
                 })
 
         return findings
+
+    def check_too_many_parameters(self, tree):
+
+        findings = []
+
+        for node in ast.walk(tree):
+
+            if not isinstance(node, ast.FunctionDef):
+                continue
+
+            parameter_count = len(node.args.args)
+
+            if parameter_count > 5:
+
+                findings.append({
+                    "rule_id": "QUAL002",
+                    "category": "code_quality",
+                    "severity": "LOW",
+                    "line": node.lineno,
+                    "message": (
+                        f"Function '{node.name}' has "
+                        f"{parameter_count} parameters. "
+                        "Consider grouping related parameters."
+                    )
+                })
+
+        return findings

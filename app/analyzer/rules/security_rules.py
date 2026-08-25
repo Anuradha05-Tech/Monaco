@@ -1,5 +1,5 @@
 import ast
-
+from app.models.finding import Finding, Severity
 
 class SecurityRules:
 
@@ -24,14 +24,24 @@ class SecurityRules:
 
                 if function_name in dangerous_functions:
 
-                    findings.append({
-                        "rule_id": "SEC001",
-                        "category": "security",
-                        "severity": "HIGH",
-                        "line": node.lineno,
-                        "message": dangerous_functions[function_name]
-                    })
-
+                    findings.append(
+    Finding(
+        rule_id="SEC001",
+        category="security",
+        severity=Severity.HIGH,
+        confidence=1.0,
+        line=node.lineno,
+        message=dangerous_functions[function_name],
+        explanation=(
+            f"The function '{function_name}' "
+            "can execute dynamically supplied code."
+        ),
+        suggestion=(
+            "Avoid dynamic code execution and use "
+            "a safer alternative."
+        )
+    )
+)
         return findings
 
     def check_hardcoded_secrets(self, tree):
@@ -77,16 +87,27 @@ class SecurityRules:
                     for keyword in secret_keywords
                 ):
 
-                    findings.append({
-                        "rule_id": "SEC002",
-                        "category": "security",
-                        "severity": "HIGH",
-                        "line": node.lineno,
-                        "message": (
-                            f"Possible hardcoded secret in "
-                            f"variable '{target.id}'."
-                        )
-                    })
+                    findings.append(
+    Finding(
+        rule_id="SEC002",
+        category="security",
+        severity=Severity.HIGH,
+        confidence=0.85,
+        line=node.lineno,
+        message=(
+            f"Possible hardcoded secret in "
+            f"variable '{target.id}'."
+        ),
+        explanation=(
+            "Secrets stored directly in source code "
+            "can accidentally be exposed."
+        ),
+        suggestion=(
+            "Use environment variables or a "
+            "dedicated secrets manager."
+        )
+    )
+)
 
         return findings
 
@@ -120,16 +141,26 @@ class SecurityRules:
                             }
                         ):
 
-                            findings.append({
-                                "rule_id": "SEC003",
-                                "category": "security",
-                                "severity": "MEDIUM",
-                                "line": node.lineno,
-                                "message": (
-                                    f"Potentially dangerous "
-                                    f"{module_name}.{function_name}() "
-                                    f"usage."
-                                )
-                            })
+                           findings.append(
+    Finding(
+        rule_id="SEC003",
+        category="security",
+        severity=Severity.MEDIUM,
+        confidence=0.75,
+        line=node.lineno,
+        message=(
+            f"Potentially dangerous "
+            f"{module_name}.{function_name}() usage."
+        ),
+        explanation=(
+            "Command execution APIs can become dangerous "
+            "when they receive untrusted input."
+        ),
+        suggestion=(
+            "Validate input and avoid shell execution "
+            "when possible."
+        )
+    )
+)
 
-        return findings
+        return findings 

@@ -1,5 +1,5 @@
 import ast
-
+from app.models.finding import Finding, Severity
 
 class ComplexityRules:
 

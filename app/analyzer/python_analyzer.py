@@ -230,4 +230,11 @@ def dangerous_function(user_input):
 
     result = analyzer.analyze(code)
 
-    print(result)
+    print({
+        **result,
+        "findings": [
+            finding.model_dump()
+            for finding in result["findings"]
+        ]
+    })
+    

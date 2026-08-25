@@ -15,8 +15,8 @@ result = eval(user_input)
     findings = result["findings"]
 
     assert len(findings) == 1
-    assert findings[0]["rule_id"] == "SEC001"
-    assert findings[0]["severity"] == "HIGH"
+    assert findings[0].rule_id == "SEC001"
+    assert findings[0].severity.value == "HIGH"
 
 
 def test_exec_is_detected():
@@ -33,7 +33,8 @@ exec(user_input)
     findings = result["findings"]
 
     assert len(findings) == 1
-    assert findings[0]["rule_id"] == "SEC001"
+    assert findings[0].rule_id == "SEC001"
+    assert findings[0].severity.value == "HIGH"
 
 
 def test_safe_code_has_no_security_issue():
@@ -67,6 +68,13 @@ exec(user_input)
 
     assert len(findings) == 2
 
+    rule_ids = [
+        finding.rule_id
+        for finding in findings
+    ]
+
+    assert "SEC001" in rule_ids
+
 
 def test_hardcoded_secret_is_detected():
 
@@ -81,7 +89,8 @@ API_KEY = "secret-value"
     findings = result["findings"]
 
     assert len(findings) == 1
-    assert findings[0]["rule_id"] == "SEC002"
+    assert findings[0].rule_id == "SEC002"
+    assert findings[0].severity.value == "HIGH"
 
 
 def test_safe_string_is_not_detected_as_secret():
@@ -114,4 +123,5 @@ subprocess.run(command)
     findings = result["findings"]
 
     assert len(findings) == 1
-    assert findings[0]["rule_id"] == "SEC003"
+    assert findings[0].rule_id == "SEC003"
+    assert findings[0].severity.value == "MEDIUM"

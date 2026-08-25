@@ -1,5 +1,5 @@
 import ast
-
+from app.models.finding import Finding, Severity
 
 class QualityRules:
 
@@ -18,17 +18,27 @@ class QualityRules:
 
             if function_length > 20:
 
-                findings.append({
-                    "rule_id": "QUAL001",
-                    "category": "code_quality",
-                    "severity": "MEDIUM",
-                    "line": node.lineno,
-                    "message": (
-                        f"Function '{node.name}' "
-                        f"is {function_length} lines long. "
-                        "Consider breaking it into smaller functions."
-                    )
-                })
+                findings.append(
+    Finding(
+        rule_id="QUAL001",
+        category="code_quality",
+        severity=Severity.MEDIUM,
+        confidence=1.0,
+        line=node.lineno,
+        message=(
+            f"Function '{node.name}' "
+            f"is {function_length} lines long."
+        ),
+        explanation=(
+            "Large functions are generally harder "
+            "to understand, test, and maintain."
+        ),
+        suggestion=(
+            "Consider breaking the function "
+            "into smaller functions."
+        )
+    )
+)
 
         return findings
 
@@ -45,16 +55,26 @@ class QualityRules:
 
             if parameter_count > 5:
 
-                findings.append({
-                    "rule_id": "QUAL002",
-                    "category": "code_quality",
-                    "severity": "LOW",
-                    "line": node.lineno,
-                    "message": (
-                        f"Function '{node.name}' has "
-                        f"{parameter_count} parameters. "
-                        "Consider grouping related parameters."
-                    )
-                })
+                findings.append(
+    Finding(
+        rule_id="QUAL002",
+        category="code_quality",
+        severity=Severity.LOW,
+        confidence=0.9,
+        line=node.lineno,
+        message=(
+            f"Function '{node.name}' has "
+            f"{parameter_count} parameters."
+        ),
+        explanation=(
+            "Functions with many parameters can "
+            "become difficult to use and maintain."
+        ),
+        suggestion=(
+            "Consider grouping related parameters "
+            "into an object or data structure."
+        )
+    )
+)
 
         return findings

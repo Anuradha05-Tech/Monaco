@@ -1,43 +1,70 @@
-import ollama
+import os
+
+from dotenv import load_dotenv
+from groq import Groq
 
 
-class OllamaClient:
+load_dotenv()
 
-    def __init__(self, model="llama3.2"):
+
+class LLMClient:
+
+    def __init__(self, model="openai/gpt-oss-120b"):
+
+        api_key = os.getenv("GROQ_API_KEY")
+
+        if not api_key:
+            raise ValueError(
+                "GROQ_API_KEY is not set in .env"
+            )
+
+        self.client = Groq(
+            api_key=api_key
+        )
+
         self.model = model
 
     def review_code(self, code):
 
         system_prompt = """
-You are an expert software engineer and code reviewer.
+You are a precise AI code reviewer.
 
 Analyze the provided Python code.
 
-Look for:
+ONLY report:
+- Real security vulnerabilities
+- Real bugs
+- Clear code-quality problems
 
-1. Security vulnerabilities
-2. Bugs
-3. Code quality problems
-4. Performance problems
-5. Maintainability problems
+Do NOT report:
+- Hypothetical problems
+- Missing functionality that was not requested
+- Generic optimization suggestions
+- Performance concerns without evidence
+- Personal style preferences
 
-Only report issues that are supported by the code.
+For every issue provide:
 
-For every important issue, explain:
+- category
+- severity
+- confidence
+- line number if known
+- short message
+- short explanation
+- short fix suggestion
 
-- What the problem is
-- Why it matters
-- How it could be improved
+Be concise.
+Do not write an essay.
 """
 
-        user_prompt = f"""
-Review the following Python code:
+        user_prompt = (
+            "Review the following Python code.\n\n"
+            "Only report important issues supported by the code.\n\n"
+            "CODE:\n"
+            f"{code}\n"
+        )
 
-```python
-{code}
-"""
-
-        response = ollama.chat(
+        response = self.client.chat.completions.create(
             model=self.model,
             messages=[
                 {
@@ -48,16 +75,8 @@ Review the following Python code:
                     "role": "user",
                     "content": user_prompt
                 }
-            ]
+            ],
+            temperature=0.1
         )
 
-        return response["message"]["content"]
-
-
-if __name__ == "__main__":
-
-    client = OllamaClient()
-
-    result = client.review_code("print('hello world')")
-
-    print(result)
+        return response.choices[0].message.content

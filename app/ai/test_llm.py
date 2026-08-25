@@ -1,4 +1,4 @@
-from app.ai.llm_client import OllamaClient
+from app.ai.llm_client import LLMClient
 
 
 code = """
@@ -10,12 +10,12 @@ def login(username, password):
 """
 
 
-llm = OllamaClient()
-
-review = llm.review_code(code)
+llm = LLMClient()
 
 print("\n==============================")
 print("       AI CODE REVIEW")
 print("==============================\n")
+
+review = llm.review_code(code)
 
 print(review)

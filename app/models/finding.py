@@ -13,7 +13,7 @@ class Severity(str, Enum):
 
 class Finding(BaseModel):
 
-    rule_id: str
+    rule_id: str | None = None
 
     category: str
 
@@ -37,4 +37,6 @@ class Finding(BaseModel):
 
     source: str = "static_analyzer"
 
-
+    sources: list[str] = Field(
+        default_factory=list
+    )

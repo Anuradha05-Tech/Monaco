@@ -1,7 +1,10 @@
+import json
 import os
 
 from dotenv import load_dotenv
 from groq import Groq
+
+from app.models.ai_review import AIReview
 
 
 load_dotenv()
@@ -27,41 +30,63 @@ class LLMClient:
     def review_code(self, code):
 
         system_prompt = """
-You are a precise AI code reviewer.
+You are a precise AI code-review engine.
 
-Analyze the provided Python code.
+Analyze Python code for:
 
-ONLY report:
 - Real security vulnerabilities
 - Real bugs
 - Clear code-quality problems
 
 Do NOT report:
+
 - Hypothetical problems
-- Missing functionality that was not requested
-- Generic optimization suggestions
+- Generic suggestions
 - Performance concerns without evidence
+- Missing functionality that was not requested
 - Personal style preferences
 
-For every issue provide:
+Return ONLY valid JSON.
 
-- category
-- severity
-- confidence
-- line number if known
-- short message
-- short explanation
-- short fix suggestion
+The JSON must have exactly this structure:
 
-Be concise.
-Do not write an essay.
+{
+    "findings": [
+        {
+            "category": "security",
+            "severity": "HIGH",
+            "confidence": 0.95,
+            "line": 3,
+            "message": "Short description",
+            "explanation": "Why this is a real issue",
+            "suggestion": "How to fix it"
+        }
+    ]
+}
+
+Severity must be one of:
+
+LOW
+MEDIUM
+HIGH
+CRITICAL
+
+Confidence must be a number between 0 and 1.
+
+If there are no important issues, return:
+
+{
+    "findings": []
+}
+
+Do not include markdown.
+Do not include ```json.
+Do not include any text outside the JSON.
 """
 
         user_prompt = (
-            "Review the following Python code.\n\n"
-            "Only report important issues supported by the code.\n\n"
-            "CODE:\n"
-            f"{code}\n"
+            "Analyze this Python code.\n\n"
+            f"{code}"
         )
 
         response = self.client.chat.completions.create(
@@ -79,4 +104,18 @@ Do not write an essay.
             temperature=0.1
         )
 
-        return response.choices[0].message.content
+        raw_response = response.choices[0].message.content
+
+        if not raw_response:
+            raise ValueError(
+                "The LLM returned an empty response."
+            )
+
+        data = json.loads(raw_response)
+
+        review = AIReview.model_validate(data)
+
+        for finding in review.findings:
+            finding.source = "ai"
+
+        return review

@@ -123,3 +123,52 @@ class GitHubClient:
             url = response.links.get("next", {}).get("url")
             
         return files
+
+    def post_review(
+        self,
+        owner: str,
+        repo: str,
+        pr_number: int,
+        commit_id: str,
+        comments: list[dict],
+        body: str = "",
+        event: str = "COMMENT"
+    ) -> dict:
+        """
+        Submits a pull request review with multiple inline comments.
+        
+        Each item in comments must be:
+        {
+            "path": str,   # File path
+            "line": int,   # Line number (head side)
+            "body": str,   # Comment body
+            "side": str    # "RIGHT" (default side of PR head changes)
+        }
+        """
+        url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
+        payload = {
+            "commit_id": commit_id,
+            "event": event
+        }
+        if body:
+            payload["body"] = body
+        if comments:
+            payload["comments"] = comments
+
+        try:
+            response = requests.post(url, json=payload, headers=self.headers)
+        except Exception as e:
+            raise GitHubAPIError(f"Network request to GitHub failed: {e}")
+
+        self._check_response(response)
+
+        try:
+            data = response.json()
+            if not isinstance(data, dict):
+                raise GitHubAPIError(f"Expected a dict from POST review response, got: {type(data)}")
+            return data
+        except (ValueError, TypeError) as e:
+            raise GitHubAPIError(
+                f"Failed to parse JSON response from GitHub API: {e}. Raw response: {response.text}"
+            )
+

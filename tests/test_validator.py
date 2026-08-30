@@ -126,3 +126,26 @@ x = 10
         code,
         finding
     ) == ValidationResult.UNVERIFIED
+
+
+def test_deterministic_finding_is_always_valid():
+
+    code = """
+x = 10
+"""
+
+    finding = Finding(
+        category="bug",
+        severity=Severity.MEDIUM,
+        confidence=0.9,
+        line=2,
+        message="Potential runtime exception",
+        source="static_analyzer"
+    )
+
+    validator = FindingValidator()
+
+    assert validator.validate(
+        code,
+        finding
+    ) == ValidationResult.VALID

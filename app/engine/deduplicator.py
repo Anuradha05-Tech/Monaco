@@ -5,6 +5,24 @@ class FindingDeduplicator:
 
     LINE_DISTANCE = 3
 
+    def are_rule_ids_compatible(self, id1: str | None, id2: str | None) -> bool:
+        if id1 is None or id2 is None:
+            return True
+        if id1 == id2:
+            return True
+        # NOTE: New analyzer rule pairs describing the same underlying issue 
+        # must be manually added here. This is a deliberate, documented 
+        # tradeoff to ensure precision, not an oversight.
+        equivalents = {
+            ("FLOW001", "SEC001"),
+            ("SEC001", "FLOW001"),
+            ("FLOW002", "SEC003"),
+            ("SEC003", "FLOW002"),
+        }
+        
+        pair = tuple(sorted([id1, id2]))
+        return pair in equivalents
+
     def are_duplicates(
         self,
         first: Finding,
@@ -13,6 +31,10 @@ class FindingDeduplicator:
 
         if first.category != second.category:
             return False
+
+        if not self.are_rule_ids_compatible(first.rule_id, second.rule_id):
+            return False
+
 
         if (
             first.line is not None
@@ -97,6 +119,13 @@ class FindingDeduplicator:
             first.confidence,
             second.confidence
         )
+
+        if primary.message != secondary.message:
+            p_lower = primary.message.lower()
+            s_lower = secondary.message.lower()
+            if p_lower not in s_lower and s_lower not in p_lower:
+                primary.message = f"{primary.message} ({secondary.message})"
+
 
         # Keep a rule ID if one exists.
 

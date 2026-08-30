@@ -18,6 +18,10 @@ class FindingValidator:
         finding: Finding
     ) -> str:
 
+        finding_sources = set(finding.sources) if finding.sources else {finding.source}
+        if "ai" not in finding_sources:
+            return ValidationResult.VALID
+
         try:
             tree = ast.parse(code)
 

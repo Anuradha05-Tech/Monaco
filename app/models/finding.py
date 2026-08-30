@@ -40,3 +40,5 @@ class Finding(BaseModel):
     sources: list[str] = Field(
         default_factory=list
     )
+
+    in_diff: bool = False

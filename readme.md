@@ -13,7 +13,7 @@ The foundational design principle of MONACO is **deterministic validation**. LLM
 1. **Structured Categorization over Prose Parsing:** 
    Early iterations of MONACO relied on keyword-based text parsing to match LLM findings with static analyzer alerts. This proved highly fragile; for example, an LLM reporting a hardcoded credential using a Unicode non-breaking hyphen (`Hard\u2011coded` instead of `hard-coded`) bypassed deduplication and resulted in double-posting. MONACO resolved this by constraining the LLM to a strict JSON schema containing a fixed `rule_category` (e.g., `hardcoded_secret`), which is mapped programmatically to concrete rule identifiers (e.g., `AI_HARDCODED_SECRET`).
 2. **AST-Grounded Semantic Validation:**
-   Every AI finding is checked against a localized Abstract Syntax Tree (AST) before it is approved. If the AI reports a security issue on line 12 but the AST indicates line 12 is a blank line or a comment, the finding is immediately rejected.
+   Every AI finding is validated against the file's Abstract Syntax Tree (AST) before approval. For example, if the AI reports a security issue claiming dynamic execution exists but the parsed AST contains no calls to `eval()` or `exec()` anywhere in the file, the finding is immediately rejected.
 3. **Subject-Identity Deduplication:**
    To prevent proximity-based over-merging (e.g., two distinct hardcoded secrets like `API_KEY` on line 7 and `SECRET_TOKEN` on line 8 being merged purely due to line proximity), the deduplicator extracts the semantic subject (e.g. the variable name) from both the static and AI finding. If the variable names differ, they are preserved as separate findings, ensuring no critical vulnerabilities are silently lost.
 

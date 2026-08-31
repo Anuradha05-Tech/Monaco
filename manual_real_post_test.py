@@ -67,6 +67,8 @@ def main():
 
     # 3. Print the results clearly
     print("=== REAL Post Output Result ===")
+    print(f"Already Reviewed:    {result.get('already_reviewed')}")
+    print(f"Existing Review URL: {result.get('existing_review_url')}")
     print(f"Dry Run:             {result.get('dry_run')}")
     print(f"Posted Comments:     {result.get('posted_count')}")
     print(f"Review URL:          {result.get('review_url')}")

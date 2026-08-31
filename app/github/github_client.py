@@ -172,3 +172,89 @@ class GitHubClient:
                 f"Failed to parse JSON response from GitHub API: {e}. Raw response: {response.text}"
             )
 
+    def get_existing_reviews(self, owner: str, repo: str, pr_number: int) -> list[dict]:
+        """
+        Retrieves the list of existing reviews on a pull request.
+        
+        Args:
+            owner: The GitHub repository owner.
+            repo: The GitHub repository name.
+            pr_number: The pull request number.
+            
+        Returns:
+            A list of dicts, where each dict represents a review.
+        """
+        url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
+        reviews = []
+        
+        while url:
+            try:
+                response = requests.get(url, headers=self.headers)
+            except Exception as e:
+                raise GitHubAPIError(f"Network request to GitHub failed: {e}")
+            
+            self._check_response(response)
+            
+            try:
+                page_reviews = response.json()
+                if not isinstance(page_reviews, list):
+                    raise GitHubAPIError(f"Expected a list of reviews, but got: {type(page_reviews)}")
+            except (ValueError, TypeError) as e:
+                raise GitHubAPIError(
+                    f"Failed to parse JSON response from GitHub API: {e}. Raw response: {response.text}"
+                )
+            
+            for r in page_reviews:
+                if not isinstance(r, dict):
+                    raise GitHubAPIError(f"Expected review entry to be a dict, got: {type(r)}")
+                reviews.append(r)
+                
+            # Follow pagination links
+            url = response.links.get("next", {}).get("url")
+            
+        return reviews
+
+    def get_existing_review_comments(self, owner: str, repo: str, pr_number: int) -> list[dict]:
+        """
+        Retrieves the list of existing review comments (diff/inline comments) on a pull request.
+        
+        Args:
+            owner: The GitHub repository owner.
+            repo: The GitHub repository name.
+            pr_number: The pull request number.
+            
+        Returns:
+            A list of dicts, where each dict represents a review comment.
+        """
+        url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}/comments"
+        comments = []
+        
+        while url:
+            try:
+                response = requests.get(url, headers=self.headers)
+            except Exception as e:
+                raise GitHubAPIError(f"Network request to GitHub failed: {e}")
+            
+            self._check_response(response)
+            
+            try:
+                page_comments = response.json()
+                if not isinstance(page_comments, list):
+                    raise GitHubAPIError(f"Expected a list of comments, but got: {type(page_comments)}")
+            except (ValueError, TypeError) as e:
+                raise GitHubAPIError(
+                    f"Failed to parse JSON response from GitHub API: {e}. Raw response: {response.text}"
+                )
+            
+            for c in page_comments:
+                if not isinstance(c, dict):
+                    raise GitHubAPIError(f"Expected comment entry to be a dict, got: {type(c)}")
+                comments.append(c)
+                
+            # Follow pagination links
+            url = response.links.get("next", {}).get("url")
+            
+        return comments
+
+
+

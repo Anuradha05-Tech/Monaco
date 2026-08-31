@@ -37,7 +37,11 @@ class ReviewCommentFormatter:
             f"---  \n"
             f"*Detected by: {detected_by}*"
         )
-        return markdown
+        
+        rule_id_str = finding.rule_id if finding.rule_id else "none"
+        marker = f"\n<!-- monaco-finding:{finding.file}:{finding.line}:{rule_id_str} -->"
+        return markdown + marker
+
 
     def build_review_comments(self, findings: list[Finding]) -> list[dict]:
         """

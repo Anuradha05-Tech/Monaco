@@ -14,6 +14,8 @@ class Severity(str, Enum):
 class Finding(BaseModel):
 
     rule_id: str | None = None
+    rule_category: str | None = None
+    variable_name: str | None = None
 
     category: str
 

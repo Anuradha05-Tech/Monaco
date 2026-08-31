@@ -67,6 +67,8 @@ def main():
 
     # 3. Print the results clearly
     print("=== Dry-Run Output Result ===")
+    print(f"Already Reviewed:    {result.get('already_reviewed')}")
+    print(f"Existing Review URL: {result.get('existing_review_url')}")
     print(f"Dry Run:             {result.get('dry_run')}")
     print(f"Comments Would Post: {result.get('would_post_count')}")
     print("=" * 60)

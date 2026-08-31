@@ -20,7 +20,7 @@ class QualityRules:
 
                 findings.append(
     Finding(
-        rule_id="QUAL001",
+        rule_id="QUAL010",
         category="code_quality",
         severity=Severity.MEDIUM,
         confidence=1.0,
@@ -57,7 +57,7 @@ class QualityRules:
 
                 findings.append(
     Finding(
-        rule_id="QUAL002",
+        rule_id="QUAL011",
         category="code_quality",
         severity=Severity.LOW,
         confidence=0.9,
@@ -76,5 +76,6 @@ class QualityRules:
         )
     )
 )
+
 
         return findings

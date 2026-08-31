@@ -27,9 +27,10 @@ class LLMClient:
 
         self.model = model
 
-    def review_code(self, code):
+    def review_code(self, code, system_prompt=None):
 
-        system_prompt = """
+        if system_prompt is None:
+            system_prompt = """
 You are a precise AI code-review engine.
 
 Analyze Python code for:
@@ -59,7 +60,9 @@ The JSON must have exactly this structure:
             "line": 3,
             "message": "Short description",
             "explanation": "Why this is a real issue",
-            "suggestion": "How to fix it"
+            "suggestion": "How to fix it",
+            "rule_category": "hardcoded_secret",
+            "variable_name": "API_KEY"
         }
     ]
 }
@@ -73,6 +76,17 @@ CRITICAL
 
 Confidence must be a number between 0 and 1.
 
+rule_category must be one of:
+- hardcoded_secret
+- command_injection
+- eval_usage
+- sql_injection
+- other
+
+If the finding does not map to any of the first four categories, you must return "other" explicitly. Do not leave it blank or null.
+
+variable_name must be the name of the variable, function, or entity involved if applicable (e.g. for hardcoded secrets, the variable name), otherwise null.
+
 If there are no important issues, return:
 
 {
@@ -85,6 +99,7 @@ Do not include any text outside the JSON.
 """
 
         user_prompt = (
+
             "Analyze this Python code.\n\n"
             f"{code}"
         )
@@ -117,5 +132,7 @@ Do not include any text outside the JSON.
 
         for finding in review.findings:
             finding.source = "ai"
+            if finding.rule_category and finding.rule_category != "other":
+                finding.rule_id = f"AI_{finding.rule_category.upper()}"
 
         return review

@@ -31,16 +31,27 @@ class ComplexityRules:
 
             if complexity > 5:
 
-                findings.append({
-                    "rule_id": "COMP001",
-                    "category": "complexity",
-                    "severity": "MEDIUM",
-                    "line": node.lineno,
-                    "message": (
-                        f"Function '{node.name}' "
-                        f"has a complexity score of "
-                        f"{complexity}."
+                findings.append(
+                    Finding(
+                        rule_id="COMP001",
+                        category="complexity",
+                        severity=Severity.MEDIUM,
+                        confidence=1.0,
+                        line=node.lineno,
+                        message=(
+                            f"Function '{node.name}' "
+                            f"has a complexity score of "
+                            f"{complexity}."
+                        ),
+                        explanation=(
+                            f"Function '{node.name}' has a high cyclomatic complexity "
+                            "indicating too many decision points."
+                        ),
+                        suggestion="Consider refactoring or splitting the function.",
+                        source="static_analyzer",
+                        sources=["static_analyzer"]
                     )
-                })
+                )
+
 
         return findings

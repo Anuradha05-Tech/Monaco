@@ -94,6 +94,7 @@ class SecurityRules:
         severity=Severity.HIGH,
         confidence=0.85,
         line=node.lineno,
+        variable_name=target.id,
         message=(
             f"Possible hardcoded secret in "
             f"variable '{target.id}'."

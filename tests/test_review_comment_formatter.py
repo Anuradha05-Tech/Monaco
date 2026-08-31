@@ -25,6 +25,8 @@ def test_format_finding_markdown_structure():
     assert "eval is dangerous" in formatted
     assert "Avoid eval." in formatted
     assert "static analysis" in formatted
+    assert "<!-- monaco-finding:app.py:10:SEC001 -->" in formatted
+
 
 def test_build_review_comments_filters_in_diff():
     formatter = ReviewCommentFormatter()

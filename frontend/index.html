@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MONACO — AI-Powered Code Review Platform</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <i data-lucide="terminal"></i>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-title">MONACO</span>
+                    <span class="logo-subtitle">AI Code Review</span>
+                </div>
+            </div>
+            <nav class="nav-links">
+                <button class="nav-btn active" data-tab="run-review-tab">
+                    <i data-lucide="play-circle"></i>
+                    <span>Run Review</span>
+                </button>
+                <button class="nav-btn" data-tab="report-tab" id="report-nav-btn">
+                    <i data-lucide="file-text"></i>
+                    <span>Review Report</span>
+                </button>
+                <button class="nav-btn" data-tab="history-tab">
+                    <i data-lucide="history"></i>
+                    <span>Run History</span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="version">v1.17.0 (FastAPI)</div>
+                <div class="status-indicator">
+                    <span class="dot green"></span>
+                    <span class="status-label">Pipeline Ready</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header Bar -->
+            <header class="top-header">
+                <h1 id="page-title">Run AI Code Review</h1>
+                <div class="environment-badge">
+                    <i data-lucide="cpu"></i>
+                    <span>LangGraph Engine</span>
+                </div>
+            </header>
+
+            <div class="tab-content-container">
+                <!-- TAB 1: RUN REVIEW FORM -->
+                <section id="run-review-tab" class="tab-pane active">
+                    <div class="card form-card">
+                        <div class="card-header">
+                            <i data-lucide="git-pull-request"></i>
+                            <h2>PR Review Configuration</h2>
+                        </div>
+                        <p class="card-description">
+                            Provide the details of the pull request and its local repository clone. Monaco will execute a multi-agent LangGraph analysis.
+                        </p>
+                        <form id="review-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="owner">GitHub Repository Owner</label>
+                                    <input type="text" id="owner" placeholder="e.g. Anuradha05-Tech" required value="Anuradha05-Tech">
+                                </div>
+                                <div class="form-group">
+                                    <label for="repo">GitHub Repository Name</label>
+                                    <input type="text" id="repo" placeholder="e.g. monaco-test-repo" required value="monaco-test-repo">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="pr_number">Pull Request Number</label>
+                                    <input type="number" id="pr_number" placeholder="e.g. 1" required min="1" value="1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="local_repo_path">Local Clone Path (Absolute)</label>
+                                    <input type="text" id="local_repo_path" placeholder="e.g. /home/user/Documents/monaco-test-repo-clone" required value="/home/user/Documents/monaco-test-repo-clone">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="run-review-btn">
+                                <i data-lucide="play"></i>
+                                <span>Start AI Review</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Loader State -->
+                    <div id="loading-overlay" class="hidden">
+                        <div class="loader-content">
+                            <div class="spinner"></div>
+                            <h3>Analyzing Pull Request...</h3>
+                            <p class="loading-subtext">Running LangGraph orchestrator. This may take 10-30 seconds depending on LLM response times.</p>
+                            <div class="terminal-logs">
+                                <div class="terminal-header">
+                                    <span class="terminal-dot red"></span>
+                                    <span class="terminal-dot yellow"></span>
+                                    <span class="terminal-dot green"></span>
+                                    <span class="terminal-title">monaco-engine.log</span>
+                                </div>
+                                <div class="terminal-body" id="live-logs">
+                                    <div class="log-line text-blue">[info] Initializing LangGraph review pipeline...</div>
+                                    <div class="log-line text-blue">[info] Target: <span id="log-target">Anuradha05-Tech/monaco-test-repo PR #1</span></div>
+                                    <div class="log-line text-blue">[info] Local repo: <span id="log-local-path">/home/user/Documents/monaco-test-repo-clone</span></div>
+                                    <div class="log-line text-yellow">[wait] Querying GitHub API for metadata & diff patches...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 2: REVIEW REPORT / RESULTS VIEW -->
+                <section id="report-tab" class="tab-pane">
+                    <div class="empty-state" id="report-empty-state">
+                        <div class="empty-icon">
+                            <i data-lucide="file-search"></i>
+                        </div>
+                        <h3>No Review Loaded</h3>
+                        <p>Configure and run a new PR review or load a past run from the Run History tab.</p>
+                        <button class="btn btn-primary" onclick="switchTab('run-review-tab')">
+                            <i data-lucide="plus"></i>
+                            <span>Go to Configuration</span>
+                        </button>
+                    </div>
+
+                    <div id="report-details" class="hidden">
+                        <!-- PR Details Header -->
+                        <div class="report-header-card">
+                            <div class="repo-info-row">
+                                <span class="repo-badge"><i data-lucide="github"></i> <span id="report-repo-fullname">owner/repo</span></span>
+                                <span class="pr-badge">PR #<span id="report-pr-number">1</span></span>
+                            </div>
+                            <h2 id="report-pr-title">PR Title</h2>
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <span class="stat-label">Changed Files</span>
+                                    <span class="stat-value" id="report-changed-count">0</span>
+                                </div>
+                                <div class="stat-card">
+                                    <span class="stat-label">Skipped Files</span>
+                                    <span class="stat-value" id="report-skipped-count">0</span>
+                                </div>
+                                <div class="stat-card">
+                                    <span class="stat-label">Rejection Ratio</span>
+                                    <span class="stat-value" id="report-rejection-ratio">0%</span>
+                                </div>
+                                <div class="stat-card">
+                                    <span class="stat-label">Total Findings</span>
+                                    <span class="stat-value" id="report-findings-count">0</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Changed Files Toggle -->
+                            <details class="changed-files-details">
+                                <summary><i data-lucide="list"></i> View Changed & Skipped Files</summary>
+                                <div class="files-lists">
+                                    <div>
+                                        <h4>Changed Files:</h4>
+                                        <ul id="report-changed-list" class="monospace-list"></ul>
+                                    </div>
+                                    <div>
+                                        <h4>Skipped Files:</h4>
+                                        <ul id="report-skipped-list" class="monospace-list"></ul>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+
+                        <!-- Manual Review Banner -->
+                        <div class="warning-banner hidden" id="manual-review-banner">
+                            <div class="banner-icon">
+                                <i data-lucide="alert-triangle"></i>
+                            </div>
+                            <div class="banner-body">
+                                <h3>High Rejection Ratio — Manual Audit Recommended</h3>
+                                <p>The automated validator rejected more than 50% of the findings generated by the LLM agents. This indicates high uncertainty in the results. Please audit these findings carefully before submitting feedback to the author.</p>
+                            </div>
+                        </div>
+
+                        <!-- Pipeline Flowchart Section -->
+                        <div class="card graph-card">
+                            <div class="card-header">
+                                <i data-lucide="network"></i>
+                                <h2>LangGraph Execution Path</h2>
+                            </div>
+                            <p class="card-description">
+                                Visualization of the LangGraph execution path. Green glowing boxes represent nodes that were successfully executed, while gray/dashed nodes were bypassed.
+                            </p>
+                            <div class="graph-wrapper">
+                                <div class="graph-container" id="graph-flowchart">
+                                    <!-- Flowchart generated dynamically by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Agents Findings (Before Merge) -->
+                        <div class="card agents-card">
+                            <div class="card-header">
+                                <i data-lucide="users"></i>
+                                <h2>Agent-Specific Raw Findings (Pre-Merge)</h2>
+                            </div>
+                            <p class="card-description">
+                                Raw findings captured independently by each of the three specialized parallel review agents before deduplication and validator checking.
+                            </p>
+                            <div class="tabs-container">
+                                <div class="tabs-header">
+                                    <button class="tab-btn active" data-agent-tab="security-agent-findings">
+                                        <i data-lucide="shield-alert"></i>
+                                        <span>Security Agent</span>
+                                        <span class="badge" id="badge-security">0</span>
+                                    </button>
+                                    <button class="tab-btn" data-agent-tab="quality-agent-findings">
+                                        <i data-lucide="code-2"></i>
+                                        <span>Quality Agent</span>
+                                        <span class="badge" id="badge-quality">0</span>
+                                    </button>
+                                    <button class="tab-btn" data-agent-tab="performance-agent-findings">
+                                        <i data-lucide="zap"></i>
+                                        <span>Performance Agent</span>
+                                        <span class="badge" id="badge-performance">0</span>
+                                    </button>
+                                </div>
+                                <div class="tabs-body">
+                                    <div id="security-agent-findings" class="agent-pane active">
+                                        <div class="findings-list" id="list-security-findings"></div>
+                                    </div>
+                                    <div id="quality-agent-findings" class="agent-pane">
+                                        <div class="findings-list" id="list-quality-findings"></div>
+                                    </div>
+                                    <div id="performance-agent-findings" class="agent-pane">
+                                        <div class="findings-list" id="list-performance-findings"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Final Ranked Findings Report -->
+                        <div class="card report-findings-card">
+                            <div class="card-header">
+                                <i data-lucide="award"></i>
+                                <h2>Final Consolidated Report</h2>
+                            </div>
+                            <p class="card-description">
+                                Deduplicated, AST-syntax validated, and severity-ranked findings recommended for submission to the PR review.
+                            </p>
+                            <div id="final-findings-list" class="findings-list">
+                                <!-- Cards injected here -->
+                            </div>
+                        </div>
+
+                        <!-- Post to GitHub Section -->
+                        <div class="card post-github-card">
+                            <div class="card-header">
+                                <i data-lucide="git-branch"></i>
+                                <h2>Submit Review to GitHub Pull Request</h2>
+                            </div>
+                            <p class="card-description">
+                                Publish the validated findings directly back to the GitHub PR as inline comments.
+                            </p>
+                            
+                            <div class="post-actions-panel">
+                                <button class="btn btn-secondary" id="btn-preview-post">
+                                    <i data-lucide="eye"></i>
+                                    <span>Preview Comments (Dry Run)</span>
+                                </button>
+                                
+                                <button class="btn btn-danger" id="btn-real-post">
+                                    <i data-lucide="send"></i>
+                                    <span>Post Review For Real</span>
+                                </button>
+                            </div>
+
+                            <!-- Preview Result Area -->
+                            <div id="post-result-container" class="hidden">
+                                <div id="post-status-banner" class="status-banner">
+                                    <div class="banner-icon" id="post-status-icon">
+                                        <i data-lucide="info"></i>
+                                    </div>
+                                    <div class="banner-body">
+                                        <h3 id="post-status-title">Status Title</h3>
+                                        <p id="post-status-msg">Status message goes here.</p>
+                                        <a href="#" id="post-review-link" class="btn btn-link hidden" target="_blank">
+                                            <span>View Review on GitHub</span>
+                                            <i data-lucide="external-link"></i>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div id="preview-comments-list-section" class="hidden">
+                                    <h3>Comments Preview (<span id="preview-comments-count">0</span> Comments)</h3>
+                                    <div id="preview-comments-list" class="preview-comments-list">
+                                        <!-- Injected dynamically -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 3: HISTORY -->
+                <section id="history-tab" class="tab-pane">
+                    <div class="card history-card">
+                        <div class="card-header">
+                            <i data-lucide="calendar"></i>
+                            <h2>Review Execution History</h2>
+                        </div>
+                        <p class="card-description">
+                            Browse past local code reviews. Click on any record to view its full interactive report.
+                        </p>
+                        <div class="history-table-container">
+                            <table class="history-table">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Repository / PR</th>
+                                        <th>Findings</th>
+                                        <th>Manual Review</th>
+                                        <th>Rejection Ratio</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                id="history-table-body"
+                                <tbody id="history-table-body">
+                                    <!-- History rows injected here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="history-empty-state" class="empty-state hidden">
+                            <div class="empty-icon">
+                                <i data-lucide="archive"></i>
+                            </div>
+                            <h3>No History Found</h3>
+                            <p>No code reviews have been performed yet. Start a review using the form!</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Main JavaScript Application -->
+    <script src="/static/app.js"></script>
+</body>
+</html>

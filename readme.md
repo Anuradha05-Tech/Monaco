@@ -131,6 +131,41 @@ To prevent spamming pull requests during CI/CD loops, MONACO implements two-laye
    GITHUB_TOKEN=your-github-personal-access-token
    ```
 
+
+---
+
+## Web UI & API (Phase 17)
+
+MONACO features a comprehensive FastAPI backend and a responsive single-page web interface. This allows developers to run, visualize, and interact with the LangGraph review pipeline directly from a web browser.
+
+### Features
+1. **Interactive Configuration Form**: Easily configure the GitHub owner, repository, PR number, and local clone path.
+2. **LangGraph Execution Visualizer**: Highlights the actual graph execution path and conditional branches taken during the review run.
+3. **Agent & Consolidated Findings**: Inspect raw outputs from Security, Quality, and Performance agents, or view the final AST-validated, ranked report.
+4. **GitHub Comment Poster**: Preview the inline comment cards (dry-run) and publish them to the live PR with a single click.
+5. **Run History Log**: Browse and reload past review runs stored locally.
+
+### How to Run
+
+1. **Activate the Environment**:
+   ```bash
+   source venv/bin/activate
+   ```
+
+2. **Start the FastAPI Backend**:
+   Run the backend server from the repository root:
+   ```bash
+   uvicorn app.api.main:app --reload --port 8000
+   ```
+
+3. **Open the Web Frontend**:
+   Once the FastAPI server is running, the frontend is served directly at:
+   [http://localhost:8000/](http://localhost:8000/)
+
+> [!IMPORTANT]
+> **Local Repository Clone Requirement:** 
+> The `local_repo_path` parameter must point to a pre-existing local clone of the target repository on the machine running the server. This phase does not automatically clone repositories (planned as a future roadmap improvement).
+
 ---
 
 ## Verification & Tests
